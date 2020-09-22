@@ -29,7 +29,7 @@ func getSimpleAccountCreationSandwich(tt *assert.Assertions) (*keypair.Full, []t
 	}
 	ops[1] = &txnbuild.CreateAccount{
 		Destination: newAccountPair.Address(),
-		Amount:      "1000",
+		Amount:      "1.5", // enough for the account to exist (1) and submit an operation (0.5)
 	}
 	ops[2] = &txnbuild.EndSponsoringFutureReserves{
 		SourceAccount: &txnbuild.SimpleAccount{
@@ -178,4 +178,73 @@ func TestSimpleSandwichRevocation(t *testing.T) {
 	tt.Len(effectRecords, 1)
 	tt.IsType(effects.AccountSponsorshipRemoved{}, effectRecords[0])
 	tt.Equal(sponsorPair.Address(), effectRecords[0].(effects.AccountSponsorshipRemoved).FormerSponsor)
+}
+
+func TestSponsorPreAuthSigner(t *testing.T) {
+	tt := assert.New(t)
+	itest := test.NewIntegrationTest(t, protocol14Config)
+	defer itest.Close()
+	sponsor := itest.MasterAccount()
+	sponsorPair := itest.Master()
+	newAccountPair, ops := getSimpleAccountCreationSandwich(tt)
+
+	// Let's create a preauthorized transaction for the new account
+	// to add a signer
+	preAuthOp := txnbuild.SetOptions{
+		Signer: &txnbuild.Signer{
+			// unspecific signer
+			Address: "GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML",
+			Weight:  1,
+		},
+	}
+	newAccount := txnbuild.SimpleAccount{
+		AccountID: newAccountPair.Address(),
+		Sequence:  0,
+	}
+	txParams := txnbuild.TransactionParams{
+		SourceAccount:        &newAccount,
+		Operations:           []txnbuild.Operation{&preAuthOp},
+		BaseFee:              txnbuild.MinBaseFee,
+		Timebounds:           txnbuild.NewInfiniteTimeout(),
+		IncrementSequenceNum: false,
+	}
+	tx, err := txnbuild.NewTransaction(txParams)
+	tt.NoError(err)
+	preAuthHash, err := tx.Hash(test.IntegrationNetworkPassphrase)
+	tt.NoError(err)
+
+	// Some operation re-shuffling:
+	// 1. Let's move the account creation before the sandwich
+	// 2. Instead, include the preauthorized signature in the sandwich
+	ops2 := make([]txnbuild.Operation, 4, 4)
+	ops[0] = ops[1]
+	copy(ops[1:], ops[:])
+	preAuthSignerKey := xdr.SignerKey{
+		Type:      xdr.SignerKeyTypeSignerKeyTypePreAuthTx,
+		PreAuthTx: (*xdr.Uint256)(&preAuthHash),
+	}
+	ops[1] = &txnbuild.SetOptions{
+		Signer: &txnbuild.Signer{
+			Address: preAuthSignerKey.Address(),
+			Weight:  0,
+		},
+	}
+
+	signers := []*keypair.Full{sponsorPair, newAccountPair}
+	txResp, err := itest.SubmitMultiSigOperations(sponsor, signers, ops2...)
+	tt.NoError(err)
+
+	var txResult xdr.TransactionResult
+	err = xdr.SafeUnmarshalBase64(txResp.ResultXdr, &txResult)
+	tt.NoError(err)
+	tt.Equal(xdr.TransactionResultCodeTxSuccess, txResult.Result.Code)
+
+	// Submit the preauthorized transaction
+	txB64, err := tx.Base64()
+	tt.NoError(err)
+	txResp, err = itest.Client().SubmitTransactionXDR(txB64)
+	tt.NoError(err)
+	err = xdr.SafeUnmarshalBase64(txResp.ResultXdr, &txResult)
+	tt.NoError(err)
+	tt.Equal(xdr.TransactionResultCodeTxSuccess, txResult.Result.Code)
 }
