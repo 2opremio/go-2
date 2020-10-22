@@ -51,13 +51,6 @@ func newStellarCoreRunner(executablePath, configPath, networkPassphrase string, 
 		nonce:             fmt.Sprintf("captive-stellar-core-%x", r.Uint64()),
 	}
 
-	// Create temp dir
-	dir := runner.getTmpDir()
-	err := os.MkdirAll(dir, 0755)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating subprocess tmpdir")
-	}
-
 	if configPath == "" {
 		err := runner.writeConf()
 		if err != nil {
@@ -68,7 +61,11 @@ func newStellarCoreRunner(executablePath, configPath, networkPassphrase string, 
 	return runner, nil
 }
 
-func (r *stellarCoreRunner) generateConfig() string {
+func (r *stellarCoreRunner) generateConfig() (string, error) {
+	base, err := r.getTmpDir()
+	if err != nil {
+		return "", err
+	}
 	lines := []string{
 		"# Generated file -- do not edit",
 		"RUN_STANDALONE=true",
@@ -76,7 +73,7 @@ func (r *stellarCoreRunner) generateConfig() string {
 		"DISABLE_XDR_FSYNC=true",
 		"UNSAFE_QUORUM=true",
 		fmt.Sprintf(`NETWORK_PASSPHRASE="%s"`, r.networkPassphrase),
-		fmt.Sprintf(`BUCKET_DIR_PATH="%s"`, filepath.Join(r.getTmpDir(), "buckets")),
+		fmt.Sprintf(`BUCKET_DIR_PATH="%s"`, filepath.Join(base, "buckets")),
 	}
 	for i, val := range r.historyURLs {
 		lines = append(lines, fmt.Sprintf("[HISTORY.h%d]", i))
@@ -88,14 +85,18 @@ func (r *stellarCoreRunner) generateConfig() string {
 		"[QUORUM_SET]",
 		"THRESHOLD_PERCENT=100",
 		`VALIDATORS=["GCZBOIAY4HLKAJVNJORXZOZRAY2BJDBZHKPBHZCRAIUR5IHC2UHBGCQR"]`)
-	return strings.ReplaceAll(strings.Join(lines, "\n"), "\\", "\\\\")
+	return strings.ReplaceAll(strings.Join(lines, "\n"), "\\", "\\\\"), nil
 }
 
-func (r *stellarCoreRunner) getConfFileName() string {
+func (r *stellarCoreRunner) getConfFileName() (string, error) {
 	if r.configPath != "" {
-		return r.configPath
+		return r.configPath, nil
 	}
-	return filepath.Join(r.getTmpDir(), "stellar-core.conf")
+	base, err := r.getTmpDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, "stellar-core.conf"), nil
 }
 
 func (*stellarCoreRunner) getLogLineWriter() io.Writer {
@@ -116,26 +117,43 @@ func (*stellarCoreRunner) getLogLineWriter() io.Writer {
 	return w
 }
 
-func (r *stellarCoreRunner) getTmpDir() string {
+func (r *stellarCoreRunner) getTmpDir() (string, error) {
 	if r.tempDir != "" {
-		return r.tempDir
+		return r.tempDir, nil
 	}
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	r.tempDir = filepath.Join(os.TempDir(), fmt.Sprintf("captive-stellar-core-%x", random.Uint64()))
-	return r.tempDir
+	if err := os.MkdirAll(r.tempDir, 0755); err != nil {
+		return "", errors.Wrap(err, "error creating subprocess tmpdir")
+	}
+	return r.tempDir, nil
 }
 
 // Makes the temp directory and writes the config file to it; called by the
 // platform-specific captiveStellarCore.Start() methods.
 func (r *stellarCoreRunner) writeConf() error {
-	conf := r.generateConfig()
-	return ioutil.WriteFile(r.getConfFileName(), []byte(conf), 0644)
+	conf, err := r.generateConfig()
+	if err != nil {
+		return err
+	}
+
+	path, err := r.getConfFileName()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(path, []byte(conf), 0644)
 }
 
 func (r *stellarCoreRunner) createCmd(params ...string) (*exec.Cmd, error) {
-	allParams := append([]string{"--conf", r.getConfFileName()}, params...)
+	confPath, err := r.getConfFileName()
+	if err != nil {
+		return nil, err
+	}
+	allParams := append([]string{"--conf", confPath}, params...)
 	cmd := exec.Command(r.executablePath, allParams...)
-	cmd.Dir = r.getTmpDir()
+	if cmd.Dir, err = r.getTmpDir(); err != nil {
+		return nil, err
+	}
 	cmd.Stdout = r.getLogLineWriter()
 	cmd.Stderr = r.getLogLineWriter()
 	return cmd, nil
@@ -228,7 +246,10 @@ func (r *stellarCoreRunner) close() error {
 		r.cmd.Wait()
 		r.cmd = nil
 	}
-	err2 = os.RemoveAll(r.getTmpDir())
+	if r.tempDir != "" {
+		err2 = os.RemoveAll(r.tempDir)
+		r.tempDir = ""
+	}
 	if err1 != nil {
 		return errors.Wrap(err1, "error killing subprocess")
 	}
