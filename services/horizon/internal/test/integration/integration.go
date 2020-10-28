@@ -60,13 +60,14 @@ type Config struct {
 }
 
 type Test struct {
-	t         *testing.T
-	config    Config
-	cli       client.APIClient
-	hclient   *sdk.Client
-	cclient   *stellarcore.Client
-	container container.ContainerCreateCreatedBody
-	app       *horizon.App
+	t                 *testing.T
+	config            Config
+	enableCaptiveCore bool
+	cli               client.APIClient
+	hclient           *sdk.Client
+	cclient           *stellarcore.Client
+	container         container.ContainerCreateCreatedBody
+	app               *horizon.App
 }
 
 // NewTest starts a new environment for integration test at a given
@@ -84,6 +85,8 @@ func NewTest(t *testing.T, config Config) *Test {
 	}
 
 	i := &Test{t: t, config: config}
+
+	i.enableCaptiveCore = os.Getenv("HORIZON_INTEGRATION_ENABLE_CAPTIVE_CORE") != ""
 
 	var err error
 	i.cli, err = client.NewEnvClient()
@@ -158,7 +161,7 @@ func NewTest(t *testing.T, config Config) *Test {
 	stellarCoreBinding := containerInfo.NetworkSettings.Ports[stellarCorePort][0]
 	coreURL := fmt.Sprintf("http://%s:%s", stellarCoreBinding.HostIP, stellarCoreBinding.HostPort)
 	// only use horizon from quickstart container when testing captive core
-	if os.Getenv("HORIZON_INTEGRATION_ENABLE_CAPTIVE_CORE") == "" {
+	if !i.enableCaptiveCore {
 		i.startHorizon(containerInfo, coreURL)
 	}
 
@@ -184,7 +187,7 @@ func NewTest(t *testing.T, config Config) *Test {
 
 func (i *Test) setupHorizonBinary() {
 	// only use horizon from quickstart container when testing captive core
-	if os.Getenv("HORIZON_INTEGRATION_ENABLE_CAPTIVE_CORE") == "" {
+	if !i.enableCaptiveCore {
 		return
 	}
 
@@ -296,6 +299,26 @@ func (i *Test) waitForCore() {
 	time.Sleep(time.Second)
 	if err := i.CloseCoreLedger(); err != nil {
 		i.t.Fatalf("Failed to manually close the second ledger: %s", err)
+	}
+
+	if i.enableCaptiveCore {
+		// captive core can only start streaming after the first checkpoint (ledger 63)
+		for ledger := 2; ledger <= 63; ledger++ {
+			if err := i.CloseCoreLedger(); err != nil {
+				i.t.Fatalf("Failed to manually close ledger %d: %s", ledger, err)
+			}
+		}
+
+		// For some reason, we need to do some waiting blackmagic for Core to publish the checkpoint.
+		// Otherwise, it indefinitely stays in `"status" : [ "Publishing 1 queued checkpoints [63-63]: Waiting: prepare-snapshot" ]`
+		time.Sleep(5 * time.Second)
+		if err := i.CloseCoreLedger(); err != nil {
+			i.t.Fatalf("Failed to manually close ledger 64: %s", err)
+		}
+		time.Sleep(1 * time.Second)
+		if err := i.CloseCoreLedger(); err != nil {
+			i.t.Fatalf("Failed to manually close ledger 65: %s", err)
+		}
 	}
 
 	// Make sure that the Sleep above was successful
@@ -437,27 +460,25 @@ func createTestContainer(i *Test, image string) error {
 	}
 	hostConfig := &container.HostConfig{}
 
-	if os.Getenv("HORIZON_INTEGRATION_ENABLE_CAPTIVE_CORE") != "" {
-		containerConfig.Env = append(containerConfig.Env,
-			"ENABLE_CAPTIVE_CORE_INGESTION=true",
-			"STELLAR_CORE_BINARY_PATH=/opt/stellar/core/bin/start",
-			"STELLAR_CORE_CONFIG_PATH=/opt/stellar/core/etc/stellar-core.cfg",
-		)
-		containerConfig.ExposedPorts = nat.PortSet{"8000": struct{}{}, "6060": struct{}{}}
+	containerConfig.ExposedPorts = nat.PortSet{
+		stellarCorePort: struct{}{},
+	}
+	hostConfig.PublishAllPorts = true
+
+	if i.enableCaptiveCore {
+		containerConfig.Cmd = append(containerConfig.Cmd, "--enable-horizon-captive-core")
+		containerConfig.ExposedPorts["8000"] = struct{}{}
+		containerConfig.ExposedPorts["6060"] = struct{}{}
 		hostConfig.PortBindings = map[nat.Port][]nat.PortBinding{
-			nat.Port("8000"): {{HostIP: "127.0.0.1", HostPort: "8000"}},
-			nat.Port("6060"): {{HostIP: "127.0.0.1", HostPort: "6060"}},
+			"8000": {{HostIP: "127.0.0.1", HostPort: "8000"}},
+			"6060": {{HostIP: "127.0.0.1", HostPort: "6060"}},
 		}
 	} else {
 		containerConfig.Env = append(containerConfig.Env,
 			"POSTGRES_PASSWORD="+stellarCorePostgresPassword,
 		)
-		containerConfig.ExposedPorts = nat.PortSet{
-			stellarCorePort:         struct{}{},
-			stellarCorePostgresPort: struct{}{},
-			historyArchivePort:      struct{}{},
-		}
-		hostConfig.PublishAllPorts = true
+		containerConfig.ExposedPorts[stellarCorePostgresPort] = struct{}{}
+		containerConfig.ExposedPorts[historyArchivePort] = struct{}{}
 	}
 
 	i.container, err = i.cli.ContainerCreate(
