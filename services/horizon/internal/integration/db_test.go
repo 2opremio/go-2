@@ -76,7 +76,9 @@ func TestResumeFromInitializedDB(t *testing.T) {
 	successfullyResumed := func() bool {
 		root, err := itest.Client().Root()
 		tt.NoError(err)
-		return root.HorizonSequence >= reachedLedger
+		// It must be able to reach the ledger and surpass it
+		const ledgersPastStopPoint = 4
+		return root.HorizonSequence > (reachedLedger + ledgersPastStopPoint)
 	}
 
 	tt.Eventually(successfullyResumed, 1*time.Minute, 1*time.Second)
