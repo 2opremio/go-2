@@ -82,15 +82,6 @@ To enable captive mode you will need to initialize some configuration variables:
 * Horizon v1.6.0,
 * Stellar-Core v13.2.0.
 
-### How It Works
-
-When using Captive Stellar-Core, Horizon runs the `stellar-core` binary as a subprocess. Then both processes communicate over filesystem pipe: Stellar-Core sends `xdr.LedgerCloseMeta` structs with information about each ledger and Horizon reads it.
-
-The behaviour is slightly different when reingesting old ledgers and when reading recently closed ledgers.
-
-When reingesting, Stellar-Core is started in a special `catchup` mode that simply replays the requested range of ledgers. This mode requires an additional 3GB of RAM because all ledger entries are stored in memory - making it extremely fast. This mode only depends on the history archives, so a `stellar-core.cfg` file is not required.
-
-When reading recently closed ledgers, Stellar-Core is started with a normal `run` command. This requires a persistent database, so extra RAM is not needed, but it makes the initial stage of applying buckets slower than when reingesting. In this case a `stellar-core.cfg` file **is** required to configure a quorum set, so that Stellar-Core can connect to the Stellar network.
 
 ### Known Issues
 
