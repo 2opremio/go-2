@@ -947,11 +947,6 @@ func (e *effectsWrapper) addClawbackEffects() error {
 	}
 	source := e.operation.SourceAccount()
 	addAssetDetails(details, op.Asset.ToAsset(*source), "")
-	e.add(
-		source.Address(),
-		history.EffectAccountCredited,
-		details,
-	)
 
 	from := op.From.ToAccountId()
 	e.add(
