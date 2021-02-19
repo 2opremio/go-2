@@ -508,6 +508,7 @@ func (c *Client) SubmitTransactionWithOptions(transaction *txnbuild.Transaction,
 	}
 
 	txeBase64, err := transaction.Base64()
+	fmt.Printf("\ntransaction:\n%s\n\n", txeBase64)
 	if err != nil {
 		err = errors.Wrap(err, "Unable to convert transaction object to base64 string")
 		return
