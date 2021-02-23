@@ -49,8 +49,8 @@ func TestHappyClawback(t *testing.T) {
 			txnbuild.AuthRevocable,
 		},
 	}
-	_, err := itest.SubmitOperations(itest.MasterAccount(), master, &setRevocableFlag)
-	tt.NoError(err)
+
+	itest.MustSubmitOperations(itest.MasterAccount(), master, &setRevocableFlag)
 
 	// Give the master account the clawback flag
 	setClawBackFlag := txnbuild.SetOptions{
@@ -58,14 +58,14 @@ func TestHappyClawback(t *testing.T) {
 			txnbuild.AuthClawbackEnabled,
 		},
 	}
-	_, err = itest.SubmitOperations(itest.MasterAccount(), master, &setClawBackFlag)
-	tt.NoError(err)
+	itest.MustSubmitOperations(itest.MasterAccount(), master, &setClawBackFlag)
 
 	// Make sure the clawback flag was set
 
 	accountDetails, err := itest.Client().AccountDetail(horizonclient.AccountRequest{
 		AccountID: master.Address(),
 	})
+	tt.NoError(err)
 	tt.True(accountDetails.Flags.AuthClawbackEnabled)
 
 	// Create another account from which to claw an asset back
@@ -165,8 +165,8 @@ func TestHappyClawbackClaimableBalance(t *testing.T) {
 			txnbuild.AuthRevocable,
 		},
 	}
-	_, err := itest.SubmitOperations(itest.MasterAccount(), master, &setRevocableFlag)
-	tt.NoError(err)
+
+	itest.MustSubmitOperations(itest.MasterAccount(), master, &setRevocableFlag)
 
 	// Give the master account the clawback flag
 	setClawBackFlag := txnbuild.SetOptions{
@@ -174,8 +174,7 @@ func TestHappyClawbackClaimableBalance(t *testing.T) {
 			txnbuild.AuthClawbackEnabled,
 		},
 	}
-	_, err = itest.SubmitOperations(itest.MasterAccount(), master, &setClawBackFlag)
-	tt.NoError(err)
+	itest.MustSubmitOperations(itest.MasterAccount(), master, &setClawBackFlag)
 
 	// Make sure the clawback flag was set
 	accountDetails, err := itest.Client().AccountDetail(horizonclient.AccountRequest{
@@ -226,7 +225,7 @@ func TestHappyClawbackClaimableBalance(t *testing.T) {
 	// Not found
 	tt.Error(err)
 
-	// Check the operation effects
+	// Check the operation details
 	opDetailsResponse, err := itest.Client().Operations(horizonclient.OperationRequest{
 		ForTransaction: clawbackCBResp.Hash,
 	})
