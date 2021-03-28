@@ -51,17 +51,14 @@ dump_horizon_db() {
 	psql "postgres://postgres:postgres@localhost:5432/horizon?sslmode=disable" -t -A -F"," --variable="FETCH_COUNT=100" -c "select history_transaction_id, address from history_transaction_participants left join history_accounts on history_accounts.id = history_transaction_participants.history_account_id order by history_transaction_id, address" > "${1}_transaction_participants"
 }
 
-stellar-core new-db
-stellar-core catchup $TO/$LEDGER_COUNT
-
 # pubnet horizon config
 export NETWORK_PASSPHRASE="Public Global Stellar Network ; September 2015"
 export HISTORY_ARCHIVE_URLS="https://s3-eu-west-1.amazonaws.com/history.stellar.org/prd/core-live/core_live_001"
 export DATABASE_URL="postgres://postgres:postgres@localhost:5432/horizon?sslmode=disable"
-export INGEST="false"
+export INGEST="true"
 export INGEST_FAILED_TRANSACTIONS=true
 export STELLAR_CORE_URL="http://localhost:11626"
-export STELLAR_CORE_DATABASE_URL="postgres://postgres:postgres@localhost:5432/core?sslmode=disable"
+export CAPTIVE_CORE_CONFIG_APPEND_PATH=/captive-core-pubnet.cfg
 
 cd stellar-go
 git pull origin
