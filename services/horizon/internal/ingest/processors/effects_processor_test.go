@@ -1508,57 +1508,55 @@ func TestOperationEffects(t *testing.T) {
 
 func TestOperationEffectsSetOptionsSignersOrder(t *testing.T) {
 	tt := assert.New(t)
-	transaction := ingest.LedgerTransaction{
-		Meta: createTransactionMeta([]xdr.OperationMeta{
-			{
-				Changes: []xdr.LedgerEntryChange{
-					// State
-					{
-						Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
-						State: &xdr.LedgerEntry{
-							Data: xdr.LedgerEntryData{
-								Type: xdr.LedgerEntryTypeAccount,
-								Account: &xdr.AccountEntry{
-									AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
-									Signers: []xdr.Signer{
-										{
-											Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
-											Weight: 10,
-										},
-										{
-											Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
-											Weight: 10,
-										},
+	meta := createTransactionMeta([]xdr.OperationMeta{
+		{
+			Changes: []xdr.LedgerEntryChange{
+				// State
+				{
+					Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
+					State: &xdr.LedgerEntry{
+						Data: xdr.LedgerEntryData{
+							Type: xdr.LedgerEntryTypeAccount,
+							Account: &xdr.AccountEntry{
+								AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
+								Signers: []xdr.Signer{
+									{
+										Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
+										Weight: 10,
+									},
+									{
+										Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
+										Weight: 10,
 									},
 								},
 							},
 						},
 					},
-					// Updated
-					{
-						Type: xdr.LedgerEntryChangeTypeLedgerEntryUpdated,
-						Updated: &xdr.LedgerEntry{
-							Data: xdr.LedgerEntryData{
-								Type: xdr.LedgerEntryTypeAccount,
-								Account: &xdr.AccountEntry{
-									AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
-									Signers: []xdr.Signer{
-										{
-											Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
-											Weight: 16,
-										},
-										{
-											Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
-											Weight: 15,
-										},
-										{
-											Key:    xdr.MustSigner("GCR3TQ2TVH3QRI7GQMC3IJGUUBR32YQHWBIKIMTYRQ2YH4XUTDB75UKE"),
-											Weight: 14,
-										},
-										{
-											Key:    xdr.MustSigner("GA4O5DLUUTLCTMM2UOWOYPNIH2FTD4NLO6KDZOFQRUISQ3FYKABGJLPC"),
-											Weight: 17,
-										},
+				},
+				// Updated
+				{
+					Type: xdr.LedgerEntryChangeTypeLedgerEntryUpdated,
+					Updated: &xdr.LedgerEntry{
+						Data: xdr.LedgerEntryData{
+							Type: xdr.LedgerEntryTypeAccount,
+							Account: &xdr.AccountEntry{
+								AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
+								Signers: []xdr.Signer{
+									{
+										Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
+										Weight: 16,
+									},
+									{
+										Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
+										Weight: 15,
+									},
+									{
+										Key:    xdr.MustSigner("GCR3TQ2TVH3QRI7GQMC3IJGUUBR32YQHWBIKIMTYRQ2YH4XUTDB75UKE"),
+										Weight: 14,
+									},
+									{
+										Key:    xdr.MustSigner("GA4O5DLUUTLCTMM2UOWOYPNIH2FTD4NLO6KDZOFQRUISQ3FYKABGJLPC"),
+										Weight: 17,
 									},
 								},
 							},
@@ -1566,8 +1564,10 @@ func TestOperationEffectsSetOptionsSignersOrder(t *testing.T) {
 					},
 				},
 			},
-		}),
-	}
+		},
+	})
+	var transaction ingest.LedgerTransaction
+	transaction.UnsafeSetMeta(meta)
 	transaction.Index = 1
 	transaction.Envelope.Type = xdr.EnvelopeTypeEnvelopeTypeTx
 	aid := xdr.MustAddress("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV")
@@ -1639,57 +1639,55 @@ func TestOperationEffectsSetOptionsSignersOrder(t *testing.T) {
 // Regression for https://github.com/stellar/go/issues/2136
 func TestOperationEffectsSetOptionsSignersNoUpdated(t *testing.T) {
 	tt := assert.New(t)
-	transaction := ingest.LedgerTransaction{
-		Meta: createTransactionMeta([]xdr.OperationMeta{
-			{
-				Changes: []xdr.LedgerEntryChange{
-					// State
-					{
-						Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
-						State: &xdr.LedgerEntry{
-							Data: xdr.LedgerEntryData{
-								Type: xdr.LedgerEntryTypeAccount,
-								Account: &xdr.AccountEntry{
-									AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
-									Signers: []xdr.Signer{
-										{
-											Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
-											Weight: 10,
-										},
-										{
-											Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
-											Weight: 10,
-										},
-										{
-											Key:    xdr.MustSigner("GA4O5DLUUTLCTMM2UOWOYPNIH2FTD4NLO6KDZOFQRUISQ3FYKABGJLPC"),
-											Weight: 17,
-										},
+	meta := createTransactionMeta([]xdr.OperationMeta{
+		{
+			Changes: []xdr.LedgerEntryChange{
+				// State
+				{
+					Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
+					State: &xdr.LedgerEntry{
+						Data: xdr.LedgerEntryData{
+							Type: xdr.LedgerEntryTypeAccount,
+							Account: &xdr.AccountEntry{
+								AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
+								Signers: []xdr.Signer{
+									{
+										Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
+										Weight: 10,
+									},
+									{
+										Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
+										Weight: 10,
+									},
+									{
+										Key:    xdr.MustSigner("GA4O5DLUUTLCTMM2UOWOYPNIH2FTD4NLO6KDZOFQRUISQ3FYKABGJLPC"),
+										Weight: 17,
 									},
 								},
 							},
 						},
 					},
-					// Updated
-					{
-						Type: xdr.LedgerEntryChangeTypeLedgerEntryUpdated,
-						Updated: &xdr.LedgerEntry{
-							Data: xdr.LedgerEntryData{
-								Type: xdr.LedgerEntryTypeAccount,
-								Account: &xdr.AccountEntry{
-									AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
-									Signers: []xdr.Signer{
-										{
-											Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
-											Weight: 16,
-										},
-										{
-											Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
-											Weight: 10,
-										},
-										{
-											Key:    xdr.MustSigner("GCR3TQ2TVH3QRI7GQMC3IJGUUBR32YQHWBIKIMTYRQ2YH4XUTDB75UKE"),
-											Weight: 14,
-										},
+				},
+				// Updated
+				{
+					Type: xdr.LedgerEntryChangeTypeLedgerEntryUpdated,
+					Updated: &xdr.LedgerEntry{
+						Data: xdr.LedgerEntryData{
+							Type: xdr.LedgerEntryTypeAccount,
+							Account: &xdr.AccountEntry{
+								AccountId: xdr.MustAddress("GC3C4AKRBQLHOJ45U4XG35ESVWRDECWO5XLDGYADO6DPR3L7KIDVUMML"),
+								Signers: []xdr.Signer{
+									{
+										Key:    xdr.MustSigner("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV"),
+										Weight: 16,
+									},
+									{
+										Key:    xdr.MustSigner("GCAHY6JSXQFKWKP6R7U5JPXDVNV4DJWOWRFLY3Y6YPBF64QRL4BPFDNS"),
+										Weight: 10,
+									},
+									{
+										Key:    xdr.MustSigner("GCR3TQ2TVH3QRI7GQMC3IJGUUBR32YQHWBIKIMTYRQ2YH4XUTDB75UKE"),
+										Weight: 14,
 									},
 								},
 							},
@@ -1697,8 +1695,10 @@ func TestOperationEffectsSetOptionsSignersNoUpdated(t *testing.T) {
 					},
 				},
 			},
-		}),
-	}
+		},
+	})
+	var transaction ingest.LedgerTransaction
+	transaction.UnsafeSetMeta(meta)
 	transaction.Index = 1
 	transaction.Envelope.Type = xdr.EnvelopeTypeEnvelopeTypeTx
 	aid := xdr.MustAddress("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV")
@@ -1760,9 +1760,9 @@ func TestOperationRegressionAccountTrustItself(t *testing.T) {
 	tt := assert.New(t)
 	// NOTE:  when an account trusts itself, the transaction is successful but
 	// no ledger entries are actually modified.
-	transaction := ingest.LedgerTransaction{
-		Meta: createTransactionMeta([]xdr.OperationMeta{}),
-	}
+	var transaction ingest.LedgerTransaction
+	meta := createTransactionMeta([]xdr.OperationMeta{})
+	transaction.UnsafeSetMeta(meta)
 	transaction.Index = 1
 	transaction.Envelope.Type = xdr.EnvelopeTypeEnvelopeTypeTx
 	aid := xdr.MustAddress("GCBBDQLCTNASZJ3MTKAOYEOWRGSHDFAJVI7VPZUOP7KXNHYR3HP2BUKV")
@@ -1809,15 +1809,14 @@ func TestOperationEffectsAllowTrustAuthorizedToMaintainLiabilities(t *testing.T)
 			},
 		},
 	}
-
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V:  2,
+		V2: &xdr.TransactionMetaV2{},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V:  2,
-				V2: &xdr.TransactionMetaV2{},
-			},
-		},
+		index:          0,
+		transaction:    tx,
 		operation:      op,
 		ledgerSequence: 1,
 	}
@@ -1871,14 +1870,14 @@ func TestOperationEffectsClawback(t *testing.T) {
 		},
 	}
 
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V:  2,
+		V2: &xdr.TransactionMetaV2{},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V:  2,
-				V2: &xdr.TransactionMetaV2{},
-			},
-		},
+		index:          0,
+		transaction:    tx,
 		operation:      op,
 		ledgerSequence: 1,
 	}
@@ -1931,14 +1930,14 @@ func TestOperationEffectsClawbackClaimableBalance(t *testing.T) {
 		},
 	}
 
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V:  2,
+		V2: &xdr.TransactionMetaV2{},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V:  2,
-				V2: &xdr.TransactionMetaV2{},
-			},
-		},
+		index:          0,
+		transaction:    tx,
 		operation:      op,
 		ledgerSequence: 1,
 	}
@@ -1980,14 +1979,14 @@ func TestOperationEffectsSetTrustLineFlags(t *testing.T) {
 		},
 	}
 
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V:  2,
+		V2: &xdr.TransactionMetaV2{},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V:  2,
-				V2: &xdr.TransactionMetaV2{},
-			},
-		},
+		index:          0,
+		transaction:    tx,
 		operation:      op,
 		ledgerSequence: 1,
 	}
@@ -2121,24 +2120,24 @@ func (s *CreateClaimableBalanceEffectsTestSuite) SetupTest() {
 			},
 		},
 		FeeChanges: xdr.LedgerEntryChanges{},
-		Meta: xdr.TransactionMeta{
-			V: 2,
-			V2: &xdr.TransactionMetaV2{
-				Operations: []xdr.OperationMeta{
-					{
-						Changes: []xdr.LedgerEntryChange{
-							{
-								Type: xdr.LedgerEntryChangeTypeLedgerEntryCreated,
-								Created: &xdr.LedgerEntry{
-									Data: xdr.LedgerEntryData{
-										Type: xdr.LedgerEntryTypeClaimableBalance,
-										ClaimableBalance: &xdr.ClaimableBalanceEntry{
-											BalanceId: balanceIDOp1,
-											Ext: xdr.ClaimableBalanceEntryExt{
-												V: 1,
-												V1: &xdr.ClaimableBalanceEntryExtensionV1{
-													Flags: xdr.Uint32(xdr.ClaimableBalanceFlagsClaimableBalanceClawbackEnabledFlag),
-												},
+	}
+	s.tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: []xdr.OperationMeta{
+				{
+					Changes: []xdr.LedgerEntryChange{
+						{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryCreated,
+							Created: &xdr.LedgerEntry{
+								Data: xdr.LedgerEntryData{
+									Type: xdr.LedgerEntryTypeClaimableBalance,
+									ClaimableBalance: &xdr.ClaimableBalanceEntry{
+										BalanceId: balanceIDOp1,
+										Ext: xdr.ClaimableBalanceEntryExt{
+											V: 1,
+											V1: &xdr.ClaimableBalanceEntryExtensionV1{
+												Flags: xdr.Uint32(xdr.ClaimableBalanceFlagsClaimableBalanceClawbackEnabledFlag),
 											},
 										},
 									},
@@ -2146,13 +2145,13 @@ func (s *CreateClaimableBalanceEffectsTestSuite) SetupTest() {
 							},
 						},
 					},
-					{
-						// Not used for the test
-					},
+				},
+				{
+					// Not used for the test
 				},
 			},
 		},
-	}
+	})
 }
 func (s *CreateClaimableBalanceEffectsTestSuite) TestEffects() {
 	testCases := []struct {
@@ -2349,84 +2348,84 @@ func (s *ClaimClaimableBalanceEffectsTestSuite) SetupTest() {
 			},
 		},
 		FeeChanges: xdr.LedgerEntryChanges{},
-		Meta: xdr.TransactionMeta{
-			V: 2,
-			V2: &xdr.TransactionMetaV2{
-				Operations: []xdr.OperationMeta{
-					// op1
-					{
-						Changes: xdr.LedgerEntryChanges{
-							xdr.LedgerEntryChange{
-								Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
-								State: &xdr.LedgerEntry{
-									Data: xdr.LedgerEntryData{
-										Type: xdr.LedgerEntryTypeClaimableBalance,
-										ClaimableBalance: &xdr.ClaimableBalanceEntry{
-											BalanceId: balanceIDOp1Meta,
-											Amount:    xdr.Int64(100000000),
-											Asset:     xdr.MustNewNativeAsset(),
-											Claimants: []xdr.Claimant{
-												{
-													Type: xdr.ClaimantTypeClaimantTypeV0,
-													V0: &xdr.ClaimantV0{
-														Destination: xdr.MustAddress("GD5OVB6FKDV7P7SOJ5UB2BPLBL4XGSHPYHINR5355SY3RSXLT2BZWAKY"),
+	}
+	s.tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: []xdr.OperationMeta{
+				// op1
+				{
+					Changes: xdr.LedgerEntryChanges{
+						xdr.LedgerEntryChange{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
+							State: &xdr.LedgerEntry{
+								Data: xdr.LedgerEntryData{
+									Type: xdr.LedgerEntryTypeClaimableBalance,
+									ClaimableBalance: &xdr.ClaimableBalanceEntry{
+										BalanceId: balanceIDOp1Meta,
+										Amount:    xdr.Int64(100000000),
+										Asset:     xdr.MustNewNativeAsset(),
+										Claimants: []xdr.Claimant{
+											{
+												Type: xdr.ClaimantTypeClaimantTypeV0,
+												V0: &xdr.ClaimantV0{
+													Destination: xdr.MustAddress("GD5OVB6FKDV7P7SOJ5UB2BPLBL4XGSHPYHINR5355SY3RSXLT2BZWAKY"),
 
-														Predicate: xdr.ClaimPredicate{
-															Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
-														},
+													Predicate: xdr.ClaimPredicate{
+														Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
 													},
 												},
 											},
-											Ext: xdr.ClaimableBalanceEntryExt{
-												V: 1,
-												V1: &xdr.ClaimableBalanceEntryExtensionV1{
-													Flags: xdr.Uint32(xdr.ClaimableBalanceFlagsClaimableBalanceClawbackEnabledFlag),
-												},
+										},
+										Ext: xdr.ClaimableBalanceEntryExt{
+											V: 1,
+											V1: &xdr.ClaimableBalanceEntryExtensionV1{
+												Flags: xdr.Uint32(xdr.ClaimableBalanceFlagsClaimableBalanceClawbackEnabledFlag),
 											},
 										},
-									},
-								},
-							},
-							xdr.LedgerEntryChange{
-								Type: xdr.LedgerEntryChangeTypeLedgerEntryRemoved,
-								Removed: &xdr.LedgerKey{
-									Type: xdr.LedgerEntryTypeClaimableBalance,
-									ClaimableBalance: &xdr.LedgerKeyClaimableBalance{
-										BalanceId: balanceIDOp1Meta,
 									},
 								},
 							},
 						},
+						xdr.LedgerEntryChange{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryRemoved,
+							Removed: &xdr.LedgerKey{
+								Type: xdr.LedgerEntryTypeClaimableBalance,
+								ClaimableBalance: &xdr.LedgerKeyClaimableBalance{
+									BalanceId: balanceIDOp1Meta,
+								},
+							},
+						},
 					},
-					// op2
-					{
-						Changes: xdr.LedgerEntryChanges{
-							xdr.LedgerEntryChange{
-								Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
-								State: &xdr.LedgerEntry{
-									Data: xdr.LedgerEntryData{
-										Type: xdr.LedgerEntryTypeClaimableBalance,
-										ClaimableBalance: &xdr.ClaimableBalanceEntry{
-											BalanceId: balanceIDOp2Meta,
-											Amount:    xdr.Int64(200000000),
-											Asset:     xdr.MustNewCreditAsset("USD", "GDRW375MAYR46ODGF2WGANQC2RRZL7O246DYHHCGWTV2RE7IHE2QUQLD"),
-											Claimants: []xdr.Claimant{
-												{
-													Type: xdr.ClaimantTypeClaimantTypeV0,
-													V0: &xdr.ClaimantV0{
-														Destination: xdr.MustAddress("GDMQUXK7ZUCWM5472ZU3YLDP4BMJLQQ76DEMNYDEY2ODEEGGRKLEWGW2"),
-														Predicate: xdr.ClaimPredicate{
-															Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
-														},
+				},
+				// op2
+				{
+					Changes: xdr.LedgerEntryChanges{
+						xdr.LedgerEntryChange{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
+							State: &xdr.LedgerEntry{
+								Data: xdr.LedgerEntryData{
+									Type: xdr.LedgerEntryTypeClaimableBalance,
+									ClaimableBalance: &xdr.ClaimableBalanceEntry{
+										BalanceId: balanceIDOp2Meta,
+										Amount:    xdr.Int64(200000000),
+										Asset:     xdr.MustNewCreditAsset("USD", "GDRW375MAYR46ODGF2WGANQC2RRZL7O246DYHHCGWTV2RE7IHE2QUQLD"),
+										Claimants: []xdr.Claimant{
+											{
+												Type: xdr.ClaimantTypeClaimantTypeV0,
+												V0: &xdr.ClaimantV0{
+													Destination: xdr.MustAddress("GDMQUXK7ZUCWM5472ZU3YLDP4BMJLQQ76DEMNYDEY2ODEEGGRKLEWGW2"),
+													Predicate: xdr.ClaimPredicate{
+														Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
 													},
 												},
-												{
-													Type: xdr.ClaimantTypeClaimantTypeV0,
-													V0: &xdr.ClaimantV0{
-														Destination: xdr.MustAddress("GDQNY3PBOJOKYZSRMK2S7LHHGWZIUISD4QORETLMXEWXBI7KFZZMKTL3"),
-														Predicate: xdr.ClaimPredicate{
-															Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
-														},
+											},
+											{
+												Type: xdr.ClaimantTypeClaimantTypeV0,
+												V0: &xdr.ClaimantV0{
+													Destination: xdr.MustAddress("GDQNY3PBOJOKYZSRMK2S7LHHGWZIUISD4QORETLMXEWXBI7KFZZMKTL3"),
+													Predicate: xdr.ClaimPredicate{
+														Type: xdr.ClaimPredicateTypeClaimPredicateUnconditional,
 													},
 												},
 											},
@@ -2434,13 +2433,13 @@ func (s *ClaimClaimableBalanceEffectsTestSuite) SetupTest() {
 									},
 								},
 							},
-							xdr.LedgerEntryChange{
-								Type: xdr.LedgerEntryChangeTypeLedgerEntryRemoved,
-								Removed: &xdr.LedgerKey{
-									Type: xdr.LedgerEntryTypeClaimableBalance,
-									ClaimableBalance: &xdr.LedgerKeyClaimableBalance{
-										BalanceId: balanceIDOp2Meta,
-									},
+						},
+						xdr.LedgerEntryChange{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryRemoved,
+							Removed: &xdr.LedgerKey{
+								Type: xdr.LedgerEntryTypeClaimableBalance,
+								ClaimableBalance: &xdr.LedgerKeyClaimableBalance{
+									BalanceId: balanceIDOp2Meta,
 								},
 							},
 						},
@@ -2448,7 +2447,7 @@ func (s *ClaimClaimableBalanceEffectsTestSuite) SetupTest() {
 				},
 			},
 		},
-	}
+	})
 }
 func (s *ClaimClaimableBalanceEffectsTestSuite) TestEffects() {
 	testCases := []struct {

@@ -27,7 +27,6 @@ func BuildLedgerTransaction(t *testing.T, tx TestTransaction) ingest.LedgerTrans
 		Envelope:   xdr.TransactionEnvelope{},
 		Result:     xdr.TransactionResultPair{},
 		FeeChanges: xdr.LedgerEntryChanges{},
-		Meta:       xdr.TransactionMeta{},
 	}
 
 	tt := assert.New(t)
@@ -36,7 +35,9 @@ func BuildLedgerTransaction(t *testing.T, tx TestTransaction) ingest.LedgerTrans
 	tt.NoError(err)
 	err = xdr.SafeUnmarshalBase64(tx.ResultXDR, &transaction.Result.Result)
 	tt.NoError(err)
-	err = xdr.SafeUnmarshalBase64(tx.MetaXDR, &transaction.Meta)
+	var meta xdr.TransactionMeta
+	err = xdr.SafeUnmarshalBase64(tx.MetaXDR, &meta)
+	transaction.UnsafeSetMeta(meta)
 	tt.NoError(err)
 	err = xdr.SafeUnmarshalBase64(tx.FeeChangesXDR, &transaction.FeeChanges)
 	tt.NoError(err)

@@ -73,28 +73,25 @@ func (p *ParticipantsProcessor) loadAccountIDs(ctx context.Context, participantS
 }
 
 func participantsForChanges(
-	changes xdr.LedgerEntryChanges,
+	changes []ingest.Change,
 ) ([]xdr.AccountId, error) {
 	var participants []xdr.AccountId
 
 	for _, c := range changes {
-		var participant *xdr.AccountId
-
-		switch c.Type {
-		case xdr.LedgerEntryChangeTypeLedgerEntryCreated:
-			participant = participantsForLedgerEntry(c.MustCreated())
-		case xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
-			participant = participantsForLedgerKey(c.MustRemoved())
-		case xdr.LedgerEntryChangeTypeLedgerEntryUpdated:
-			participant = participantsForLedgerEntry(c.MustUpdated())
-		case xdr.LedgerEntryChangeTypeLedgerEntryState:
-			participant = participantsForLedgerEntry(c.MustState())
-		default:
-			return nil, errors.Errorf("Unknown change type: %s", c.Type)
+		if c.Type != xdr.LedgerEntryTypeAccount {
+			continue
 		}
-
-		if participant != nil {
-			participants = append(participants, *participant)
+		if c.Pre != nil {
+			participant := participantsForLedgerEntry(*c.Pre)
+			if participant != nil {
+				participants = append(participants, *participant)
+			}
+		}
+		if c.Post != nil {
+			participant := participantsForLedgerEntry(*c.Post)
+			if participant != nil {
+				participants = append(participants, *participant)
+			}
 		}
 	}
 
@@ -117,27 +114,6 @@ func participantsForLedgerKey(lk xdr.LedgerKey) *xdr.AccountId {
 	return &aid
 }
 
-func participantsForMeta(
-	meta xdr.TransactionMeta,
-) ([]xdr.AccountId, error) {
-	var participants []xdr.AccountId
-	if meta.Operations == nil {
-		return participants, nil
-	}
-
-	for _, op := range *meta.Operations {
-		var accounts []xdr.AccountId
-		accounts, err := participantsForChanges(op.Changes)
-		if err != nil {
-			return nil, err
-		}
-
-		participants = append(participants, accounts...)
-	}
-
-	return participants, nil
-}
-
 func participantsForTransaction(
 	sequence uint32,
 	transaction ingest.LedgerTransaction,
@@ -148,14 +124,17 @@ func participantsForTransaction(
 	if transaction.Envelope.IsFeeBump() {
 		participants = append(participants, transaction.Envelope.FeeBumpAccount().ToAccountId())
 	}
-
-	p, err := participantsForMeta(transaction.Meta)
+	changes, err := transaction.GetChanges()
+	if err != nil {
+		return nil, err
+	}
+	p, err := participantsForChanges(changes)
 	if err != nil {
 		return nil, err
 	}
 	participants = append(participants, p...)
 
-	p, err = participantsForChanges(transaction.FeeChanges)
+	p, err = participantsForChanges(transaction.GetFeeChanges())
 	if err != nil {
 		return nil, err
 	}

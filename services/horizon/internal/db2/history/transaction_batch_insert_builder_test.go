@@ -75,15 +75,15 @@ func TestTransactionToMap_muxed(t *testing.T) {
 				},
 			},
 		},
-		Meta: xdr.TransactionMeta{
-			V:          1,
-			Operations: &[]xdr.OperationMeta{},
-			V1: &xdr.TransactionMetaV1{
-				TxChanges:  []xdr.LedgerEntryChange{},
-				Operations: []xdr.OperationMeta{},
-			},
-		},
 	}
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V:          1,
+		Operations: &[]xdr.OperationMeta{},
+		V1: &xdr.TransactionMetaV1{
+			TxChanges:  []xdr.LedgerEntryChange{},
+			Operations: []xdr.OperationMeta{},
+		},
+	})
 	row, err := transactionToRow(tx, 20)
 	assert.NoError(t, err)
 

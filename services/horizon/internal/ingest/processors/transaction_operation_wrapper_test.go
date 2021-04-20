@@ -1039,16 +1039,16 @@ func TestTransactionOperationAllowTrustDetails(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			operation := transactionOperationWrapper{
-				index: 0,
-				transaction: ingest.LedgerTransaction{
-					Meta: xdr.TransactionMeta{
-						V: 2,
-						V2: &xdr.TransactionMetaV2{
-							Operations: make([]xdr.OperationMeta, 1, 1),
-						},
-					},
+			var tx ingest.LedgerTransaction
+			tx.UnsafeSetMeta(xdr.TransactionMeta{
+				V: 2,
+				V2: &xdr.TransactionMetaV2{
+					Operations: make([]xdr.OperationMeta, 1, 1),
 				},
+			})
+			operation := transactionOperationWrapper{
+				index:          0,
+				transaction:    tx,
 				operation:      tc.op,
 				ledgerSequence: 1,
 			}
@@ -1169,16 +1169,16 @@ func (s *CreateClaimableBalanceOpTestSuite) TestDetails() {
 	}
 	for _, tc := range testCases {
 		s.T().Run(tc.desc, func(t *testing.T) {
-			operation := transactionOperationWrapper{
-				index: 0,
-				transaction: ingest.LedgerTransaction{
-					Meta: xdr.TransactionMeta{
-						V: 2,
-						V2: &xdr.TransactionMetaV2{
-							Operations: make([]xdr.OperationMeta, 1, 1),
-						},
-					},
+			var tx ingest.LedgerTransaction
+			tx.UnsafeSetMeta(xdr.TransactionMeta{
+				V: 2,
+				V2: &xdr.TransactionMetaV2{
+					Operations: make([]xdr.OperationMeta, 1, 1),
 				},
+			})
+			operation := transactionOperationWrapper{
+				index:          0,
+				transaction:    tx,
 				operation:      tc.op,
 				ledgerSequence: 1,
 			}
@@ -1216,14 +1216,16 @@ func (s *CreateClaimableBalanceOpTestSuite) TestParticipants() {
 	}
 	for _, tc := range testCases {
 		s.T().Run(tc.desc, func(t *testing.T) {
+			var tx ingest.LedgerTransaction
+			tx.UnsafeSetMeta(xdr.TransactionMeta{
+				V: 2,
+				V2: &xdr.TransactionMetaV2{
+					Operations: make([]xdr.OperationMeta, 1, 1),
+				},
+			})
 			operation := transactionOperationWrapper{
-				index: 0,
-				transaction: ingest.LedgerTransaction{Meta: xdr.TransactionMeta{
-					V: 2,
-					V2: &xdr.TransactionMetaV2{
-						Operations: make([]xdr.OperationMeta, 1, 1),
-					},
-				}},
+				index:          0,
+				transaction:    tx,
 				operation:      tc.op,
 				ledgerSequence: 1,
 			}
@@ -1266,15 +1268,16 @@ func (s *ClaimClaimableBalanceOpTestSuite) TestDetails() {
 		"balance_id": s.balanceID,
 	}
 
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
+		},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			}},
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}
@@ -1285,16 +1288,16 @@ func (s *ClaimClaimableBalanceOpTestSuite) TestDetails() {
 }
 
 func (s *ClaimClaimableBalanceOpTestSuite) TestParticipants() {
-	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			},
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
 		},
+	})
+	operation := transactionOperationWrapper{
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}
@@ -1319,7 +1322,7 @@ func getSponsoredSandwichWrappers() []*transactionOperationWrapper {
 	const ledgerSeq = uint32(12345)
 	tx := createTransaction(true, 3)
 	tx.Index = 1
-	tx.Meta = xdr.TransactionMeta{
+	meta := xdr.TransactionMeta{
 		V: 2,
 		V2: &xdr.TransactionMetaV2{
 			Operations: make([]xdr.OperationMeta, 3, 3),
@@ -1358,7 +1361,7 @@ func getSponsoredSandwichWrappers() []*transactionOperationWrapper {
 	}
 	sponsoreeMuxed := sponsoree.ToMuxedAccount()
 	tx.Envelope.Operations()[1].SourceAccount = &sponsoreeMuxed
-	tx.Meta.V2.Operations[1] = xdr.OperationMeta{Changes: []xdr.LedgerEntryChange{
+	meta.V2.Operations[1] = xdr.OperationMeta{Changes: []xdr.LedgerEntryChange{
 		{
 			Type: xdr.LedgerEntryChangeTypeLedgerEntryCreated,
 			Created: &xdr.LedgerEntry{
@@ -1372,6 +1375,7 @@ func getSponsoredSandwichWrappers() []*transactionOperationWrapper {
 			},
 		},
 	}}
+	tx.UnsafeSetMeta(meta)
 
 	// end sponsorship
 	tx.Envelope.Operations()[2].Body = xdr.OperationBody{
@@ -1481,16 +1485,16 @@ func (s *ClawbackTestSuite) TestDetails() {
 		"amount":       "0.0000020",
 		"from":         "GAUJETIZVEP2NRYLUESJ3LS66NVCEGMON4UDCBCSBEVPIID773P2W6AY",
 	}
-
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
+		},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			}},
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}
@@ -1501,16 +1505,16 @@ func (s *ClawbackTestSuite) TestDetails() {
 }
 
 func (s *ClawbackTestSuite) TestParticipants() {
-	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			},
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
 		},
+	})
+	operation := transactionOperationWrapper{
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}
@@ -1564,15 +1568,16 @@ func (s *SetTrustLineFlagsTestSuite) TestDetails() {
 		"trustor":       "GAUJETIZVEP2NRYLUESJ3LS66NVCEGMON4UDCBCSBEVPIID773P2W6AY",
 	}
 
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
+		},
+	})
 	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			}},
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}
@@ -1583,16 +1588,16 @@ func (s *SetTrustLineFlagsTestSuite) TestDetails() {
 }
 
 func (s *SetTrustLineFlagsTestSuite) TestParticipants() {
-	operation := transactionOperationWrapper{
-		index: 0,
-		transaction: ingest.LedgerTransaction{
-			Meta: xdr.TransactionMeta{
-				V: 2,
-				V2: &xdr.TransactionMetaV2{
-					Operations: make([]xdr.OperationMeta, 1, 1),
-				},
-			},
+	var tx ingest.LedgerTransaction
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, 1, 1),
 		},
+	})
+	operation := transactionOperationWrapper{
+		index:          0,
+		transaction:    tx,
 		operation:      s.op,
 		ledgerSequence: 1,
 	}

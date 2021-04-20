@@ -67,23 +67,28 @@ func (s *ClaimableBalancesTransactionProcessorTestSuiteLedger) testOperationInse
 	internalID := int64(1234)
 	txn := createTransaction(true, 1)
 	txn.Envelope.Operations()[0].Body = body
-	txn.Meta.V = 2
-	txn.Meta.V2.Operations = []xdr.OperationMeta{
-		{Changes: xdr.LedgerEntryChanges{
-			{
-				Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
-				State: &xdr.LedgerEntry{
-					Data: xdr.LedgerEntryData{
-						Type: xdr.LedgerEntryTypeClaimableBalance,
-						ClaimableBalance: &xdr.ClaimableBalanceEntry{
-							BalanceId: balanceID,
+	txn.UnsafeSetMeta(
+		xdr.TransactionMeta{
+			V: 2,
+			V2: &xdr.TransactionMetaV2{
+				Operations: []xdr.OperationMeta{
+					{Changes: xdr.LedgerEntryChanges{
+						{
+							Type: xdr.LedgerEntryChangeTypeLedgerEntryState,
+							State: &xdr.LedgerEntry{
+								Data: xdr.LedgerEntryData{
+									Type: xdr.LedgerEntryTypeClaimableBalance,
+									ClaimableBalance: &xdr.ClaimableBalanceEntry{
+										BalanceId: balanceID,
+									},
+								},
+							},
 						},
-					},
+						change,
+					}},
 				},
-			},
-			change,
-		}},
-	}
+			}},
+	)
 
 	if body.Type == xdr.OperationTypeCreateClaimableBalance {
 		// For insert test

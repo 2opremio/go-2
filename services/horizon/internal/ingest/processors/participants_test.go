@@ -34,22 +34,22 @@ func TestParticipantsForTransaction(t *testing.T) {
 			&feeChanges,
 		),
 	)
-
-	particpants, err := participantsForTransaction(
-		3,
-		ingest.LedgerTransaction{
-			Index:      1,
-			Envelope:   envelope,
-			FeeChanges: feeChanges,
-			Meta:       meta,
-			Result: xdr.TransactionResultPair{
-				Result: xdr.TransactionResult{
-					Result: xdr.TransactionResultResult{
-						Code: xdr.TransactionResultCodeTxSuccess,
-					},
+	tx := ingest.LedgerTransaction{
+		Index:      1,
+		Envelope:   envelope,
+		FeeChanges: feeChanges,
+		Result: xdr.TransactionResultPair{
+			Result: xdr.TransactionResult{
+				Result: xdr.TransactionResultResult{
+					Code: xdr.TransactionResultCodeTxSuccess,
 				},
 			},
 		},
+	}
+	tx.UnsafeSetMeta(meta)
+	particpants, err := participantsForTransaction(
+		3,
+		tx,
 	)
 	assert.NoError(t, err)
 	assert.Len(t, particpants, 2)

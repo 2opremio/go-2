@@ -14,7 +14,17 @@ type LedgerTransaction struct {
 	// Use LedgerTransaction.GetChanges() for higher level access to ledger
 	// entry changes.
 	FeeChanges xdr.LedgerEntryChanges
-	Meta       xdr.TransactionMeta
+	meta       xdr.TransactionMeta
+}
+
+// UnsafeSetMeta should only be used when you know what you are doing.
+func (t *LedgerTransaction) UnsafeSetMeta(meta xdr.TransactionMeta) {
+	t.meta = meta
+}
+
+// UnsafeGetMeta should only be used when you know what you are doing. Normally you should use GetChanges()
+func (t *LedgerTransaction) UnsafeGetMeta() xdr.TransactionMeta {
+	return t.meta
 }
 
 func (t *LedgerTransaction) txInternalError() bool {
@@ -35,11 +45,11 @@ func (t *LedgerTransaction) GetChanges() ([]Change, error) {
 	var changes []Change
 
 	// Transaction meta
-	switch t.Meta.V {
+	switch t.meta.V {
 	case 0:
 		return changes, errors.New("TransactionMeta.V=0 not supported")
 	case 1:
-		v1Meta := t.Meta.MustV1()
+		v1Meta := t.meta.MustV1()
 		txChanges := GetChangesFromLedgerEntryChanges(v1Meta.TxChanges)
 		changes = append(changes, txChanges...)
 
@@ -56,7 +66,7 @@ func (t *LedgerTransaction) GetChanges() ([]Change, error) {
 		}
 
 	case 2:
-		v2Meta := t.Meta.MustV2()
+		v2Meta := t.meta.MustV2()
 		txChangesBefore := GetChangesFromLedgerEntryChanges(v2Meta.TxChangesBefore)
 		changes = append(changes, txChangesBefore...)
 
@@ -88,7 +98,7 @@ func (t *LedgerTransaction) GetOperationChanges(operationIndex uint32) ([]Change
 	changes := []Change{}
 
 	// Transaction meta
-	switch t.Meta.V {
+	switch t.meta.V {
 	case 0:
 		return changes, errors.New("TransactionMeta.V=0 not supported")
 	case 1:
@@ -97,7 +107,7 @@ func (t *LedgerTransaction) GetOperationChanges(operationIndex uint32) ([]Change
 			return changes, nil
 		}
 
-		v1Meta := t.Meta.MustV1()
+		v1Meta := t.meta.MustV1()
 		changes = operationChanges(v1Meta.Operations, operationIndex)
 	case 2:
 		// Ignore operations meta if txInternalError https://github.com/stellar/go/issues/2111
@@ -105,7 +115,7 @@ func (t *LedgerTransaction) GetOperationChanges(operationIndex uint32) ([]Change
 			return changes, nil
 		}
 
-		v2Meta := t.Meta.MustV2()
+		v2Meta := t.meta.MustV2()
 		changes = operationChanges(v2Meta.Operations, operationIndex)
 	default:
 		return changes, errors.New("Unsupported TransactionMeta version")

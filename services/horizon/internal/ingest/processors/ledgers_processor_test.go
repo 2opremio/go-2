@@ -48,7 +48,7 @@ func createTransaction(successful bool, numOps int) ingest.LedgerTransaction {
 		})
 	}
 	sourceAID := xdr.MustAddress("GAUJETIZVEP2NRYLUESJ3LS66NVCEGMON4UDCBCSBEVPIID773P2W6AY")
-	return ingest.LedgerTransaction{
+	tx := ingest.LedgerTransaction{
 		Result: xdr.TransactionResultPair{
 			TransactionHash: xdr.Hash{},
 			Result: xdr.TransactionResult{
@@ -68,13 +68,14 @@ func createTransaction(successful bool, numOps int) ingest.LedgerTransaction {
 				},
 			},
 		},
-		Meta: xdr.TransactionMeta{
-			V: 2,
-			V2: &xdr.TransactionMetaV2{
-				Operations: make([]xdr.OperationMeta, numOps, numOps),
-			},
-		},
 	}
+	tx.UnsafeSetMeta(xdr.TransactionMeta{
+		V: 2,
+		V2: &xdr.TransactionMetaV2{
+			Operations: make([]xdr.OperationMeta, numOps, numOps),
+		},
+	})
+	return tx
 }
 
 func (s *LedgersProcessorTestSuiteLedger) SetupTest() {
