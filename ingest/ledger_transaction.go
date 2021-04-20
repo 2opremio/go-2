@@ -47,7 +47,14 @@ func (t *LedgerTransaction) GetChanges() ([]Change, error) {
 	// Transaction meta
 	switch t.meta.V {
 	case 0:
-		return changes, errors.New("TransactionMeta.V=0 not supported")
+		if t.meta.Operations != nil {
+			for _, operationMeta := range *t.meta.Operations {
+				opChanges := GetChangesFromLedgerEntryChanges(
+					operationMeta.Changes,
+				)
+				changes = append(changes, opChanges...)
+			}
+		}
 	case 1:
 		v1Meta := t.meta.MustV1()
 		txChanges := GetChangesFromLedgerEntryChanges(v1Meta.TxChanges)
