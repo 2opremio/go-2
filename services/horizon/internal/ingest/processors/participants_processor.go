@@ -106,14 +106,6 @@ func participantsForLedgerEntry(le xdr.LedgerEntry) *xdr.AccountId {
 	return &aid
 }
 
-func participantsForLedgerKey(lk xdr.LedgerKey) *xdr.AccountId {
-	if lk.Type != xdr.LedgerEntryTypeAccount {
-		return nil
-	}
-	aid := lk.MustAccount().AccountId
-	return &aid
-}
-
 func participantsForTransaction(
 	sequence uint32,
 	transaction ingest.LedgerTransaction,
