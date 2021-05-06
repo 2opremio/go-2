@@ -394,7 +394,7 @@ jobs:
           command: |
             docker build -f services/horizon/docker/verify-range/Dockerfile -t stellar/horizon-verify-range services/horizon/docker/verify-range/
             # Any range should do for basic testing, this range was chosen pretty early in history so that it only takes a few mins to run
-            docker run -ti -e BRANCH=05e09089828a0528e5545a04d7f713dee8f8e379 -e FROM=15000063 -e TO=15000127 stellar/horizon-verify-range
+            docker run -ti -e BRANCH=master -e FROM=15000063 -e TO=15000127 stellar/horizon-verify-range
 
   publish_latest_horizon_docker_image:
     docker:
