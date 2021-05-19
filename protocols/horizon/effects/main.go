@@ -2,8 +2,9 @@ package effects
 
 import (
 	"encoding/json"
-	"github.com/stellar/go/xdr"
 	"time"
+
+	"github.com/stellar/go/xdr"
 
 	"github.com/stellar/go/protocols/horizon/base"
 	"github.com/stellar/go/support/render/hal"
@@ -249,6 +250,8 @@ type Base struct {
 	ID              string    `json:"id"`
 	PT              string    `json:"paging_token"`
 	Account         string    `json:"account"`
+	AccountMuxed    string    `json:"account_muxed,omitempty"`
+	AccountMuxedID  uint64    `json:"account_muxed_id,omitempty"`
 	Type            string    `json:"type"`
 	TypeI           int32     `json:"type_i"`
 	LedgerCloseTime time.Time `json:"created_at"`
@@ -382,6 +385,8 @@ type TrustlineDeauthorized struct {
 type Trade struct {
 	Base
 	Seller            string `json:"seller"`
+	SellerMuxed       string `json:"seller_muxed,omitempty"`
+	SellerMuxedID     uint64 `json:"seller_muxed_id,omitempty"`
 	OfferID           int64  `json:"offer_id,string"`
 	SoldAmount        string `json:"sold_amount"`
 	SoldAssetType     string `json:"sold_asset_type"`
