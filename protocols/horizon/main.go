@@ -454,6 +454,8 @@ type Transaction struct {
 	Ledger             int32               `json:"ledger"`
 	LedgerCloseTime    time.Time           `json:"created_at"`
 	Account            string              `json:"source_account"`
+	AccountMuxed       string              `json:"source_account_muxed,omitempty"`
+	AccountMuxedID     uint64              `json:"source_account_muxed_id,omitempty"`
 	AccountSequence    string              `json:"source_account_sequence"`
 	FeeAccount         string              `json:"fee_account"`
 	FeeCharged         int64               `json:"fee_charged,string"`

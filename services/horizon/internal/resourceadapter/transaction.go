@@ -30,6 +30,16 @@ func PopulateTransaction(
 	dest.Ledger = row.LedgerSequence
 	dest.LedgerCloseTime = row.LedgerCloseTime
 	dest.Account = row.Account
+	var env xdr.TransactionEnvelope
+	if err := xdr.SafeUnmarshalBase64(row.TxEnvelope, &env); err != nil {
+		return err
+
+	}
+	source := env.SourceAccount()
+	if source.Type == xdr.CryptoKeyTypeKeyTypeMuxedEd25519 {
+		dest.AccountMuxed = source.Address()
+		dest.AccountMuxedID = uint64(source.Med25519.Id)
+	}
 	dest.AccountSequence = row.AccountSequence
 
 	dest.FeeCharged = row.FeeCharged
