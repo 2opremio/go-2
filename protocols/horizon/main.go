@@ -458,6 +458,8 @@ type Transaction struct {
 	AccountMuxedID     uint64              `json:"source_account_muxed_id,omitempty"`
 	AccountSequence    string              `json:"source_account_sequence"`
 	FeeAccount         string              `json:"fee_account"`
+	FeeAccountMuxed    string              `json:"fee_account_muxed,omitempty"`
+	FeeAccountMuxedID  uint64              `json:"fee_account_muxed_id,omitempty"`
 	FeeCharged         int64               `json:"fee_charged,string"`
 	MaxFee             int64               `json:"max_fee,string"`
 	OperationCount     int32               `json:"operation_count"`

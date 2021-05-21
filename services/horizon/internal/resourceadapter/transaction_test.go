@@ -1,10 +1,12 @@
 package resourceadapter
 
 import (
+	"context"
 	"encoding/base64"
+	"testing"
+
 	"github.com/guregu/null"
 	"github.com/stellar/go/xdr"
-	"testing"
 
 	. "github.com/stellar/go/protocols/horizon"
 	"github.com/stellar/go/services/horizon/internal/db2/history"
@@ -196,4 +198,48 @@ func TestFeeBumpTransaction(t *testing.T) {
 	assert.Equal(t, row.TransactionHash, dest.FeeBumpTransaction.Hash)
 	assert.Equal(t, []string{"a", "b", "c"}, dest.FeeBumpTransaction.Signatures)
 	assert.Equal(t, "/transactions/"+row.InnerTransactionHash.String, dest.Links.Transaction.Href)
+}
+
+var benchmarkRow = history.Transaction{
+	TransactionWithoutLedger: history.TransactionWithoutLedger{
+		MaxFee:               123,
+		FeeCharged:           100,
+		TransactionHash:      "cebb875a00ff6e1383aef0fd251a76f22c1f9ab2a2dffcb077855736ade2659a",
+		FeeAccount:           null.StringFrom("GCXKG6RN4ONIEPCMNFB732A436Z5PNDSRLGWK7GBLCMQLIFO4S7EYWVU"),
+		Account:              "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+		NewMaxFee:            null.IntFrom(10000),
+		InnerTransactionHash: null.StringFrom("2374e99349b9ef7dba9a5db3339b78fda8f34777b1af33ba468ad5c0df946d4d"),
+		Signatures:           []string{"a", "b", "c"},
+		InnerSignatures:      []string{"d", "e", "f"},
+		// Taken from stellar expert https://stellar.expert/explorer/public/tx/49a32e2182794082068177e309ad07ff8cd7b8009e762e56470dcc1bcd857ab2
+		TxEnvelope: "AAAAAgAAAAClCIkx/8pxonhzeeq7qefyRw+nu1nir2tLZ3BDg+7N0QAAF3ABMKSzAEQaKwAAAAEAAAAAAAAAAAAAAABgp5pcAAAAAAAAAAYAAAAAAAAADAAAAAFYUlAAAAAAAGrl+/NlIBMvk84azG8w7Y0MFeUfapja8f6qDe6lavWuAAAAAAAAAAAAAAAAAAAAAQAAJxAAAAAAIqTA3AAAAAAAAAAMAAAAAVhSUAAAAAAAauX782UgEy+TzhrMbzDtjQwV5R9qmNrx/qoN7qVq9a4AAAAAAAAAAAAAAAAAAAABAAAnEAAAAAAipMDdAAAAAAAAAAwAAAABWFJQAAAAAABq5fvzZSATL5POGsxvMO2NDBXlH2qY2vH+qg3upWr1rgAAAAAAAAAAAAAAAAAAAAEAACcQAAAAACKkwN4AAAAAAAAAAwAAAAAAAAABWFJQAAAAAABq5fvzZSATL5POGsxvMO2NDBXlH2qY2vH+qg3upWr1rgAAAAAdQ0UvGac22lbK/DUAAAAAAAAAAAAAAAAAAAAMAAAAAVhSUAAAAAAAauX782UgEy+TzhrMbzDtjQwV5R9qmNrx/qoN7qVq9a4AAAAAAAAAAB2ZLpEFz4B1G3R5lgAAAAAAAAAAAAAAAAAAAAwAAAABWFJQAAAAAABq5fvzZSATL5POGsxvMO2NDBXlH2qY2vH+qg3upWr1rgAAAAAAAAACOSXP0RBJYb9M9GtzAAAAAAAAAAAAAAAAAAAAAYPuzdEAAABAJhhtt3vAXjRYwauDezQwFLD8A9GYArJ/LWxSYttnc/tsfWZd53JtUSap3W5JPEVPfBxzEzs5gdsw9M2TQ7pDDQ==",
+	},
+}
+
+func BenchmarkNewTransactionMuxed(b *testing.B) {
+	var dest Transaction
+	ctx := context.Background()
+	for n := 0; n < b.N; n++ {
+		PopulateTransaction(
+			ctx,
+			"cebb875a00ff6e1383aef0fd251a76f22c1f9ab2a2dffcb077855736ade2659a",
+			&dest,
+			benchmarkRow,
+		)
+
+	}
+}
+
+func BenchmarkNewTransactionNotMuxed(b *testing.B) {
+	var dest Transaction
+	ctx := context.Background()
+	for n := 0; n < b.N; n++ {
+		PopulateTransactionNotMuxed(
+			ctx,
+			"cebb875a00ff6e1383aef0fd251a76f22c1f9ab2a2dffcb077855736ade2659a",
+			&dest,
+			benchmarkRow,
+		)
+
+	}
 }
