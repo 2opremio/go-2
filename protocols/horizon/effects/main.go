@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/stellar/go/xdr"
-
 	"github.com/stellar/go/protocols/horizon/base"
 	"github.com/stellar/go/support/render/hal"
+	"github.com/stellar/go/xdr"
 )
 
 // Peter 30-04-2019: this is copied from the history package "github.com/stellar/go/services/horizon/internal/db2/history"
