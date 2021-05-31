@@ -14,6 +14,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -97,7 +98,9 @@ type UpdateBuilder struct {
 // cross goroutine boundaries and is not concurrency safe.
 type Session struct {
 	// DB is the database connection that queries should be executed against.
-	DB *sqlx.DB
+	DB           *sqlx.DB
+	pingerStopCh chan struct{}
+	closeOnce    sync.Once
 
 	tx        *sqlx.Tx
 	txOptions *sql.TxOptions
@@ -160,8 +163,31 @@ func Open(dialect, dsn string) (*Session, error) {
 	if err = pingDB(db); err != nil {
 		return nil, errors.Wrap(err, "ping failed")
 	}
+	pingerStopCh := make(chan struct{})
+	ret := &Session{DB: db, pingerStopCh: pingerStopCh}
+	go func() {
+		const maxFailures = 5
+		currentFailures := 0
+		t := time.NewTicker(1 * time.Second)
+		for {
+			select {
+			case <-t.C:
+				if err := ret.DB.Ping(); err != nil {
+					currentFailures++
+					if currentFailures == maxFailures {
 
-	return &Session{DB: db}, nil
+					}
+				} else {
+					currentFailures = 0
+				}
+			case <-pingerStopCh:
+				return
+			}
+		}
+
+	}()
+
+	return ret, nil
 }
 
 // Wrap wraps a bare *sql.DB (from the database/sql stdlib package) in a
