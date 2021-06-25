@@ -5,6 +5,7 @@ import (
 
 	"github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/keypair"
+	"github.com/stellar/go/protocols/horizon/effects"
 	"github.com/stellar/go/services/horizon/internal/test/integration"
 	"github.com/stellar/go/txnbuild"
 	"github.com/stellar/go/xdr"
@@ -120,6 +121,14 @@ func TestMuxedOperations(t *testing.T) {
 	_, err = itest.Client().Payments(horizonclient.OperationRequest{Limit: 200})
 	assert.NoError(t, err, "/payments failed")
 
-	_, err = itest.Client().Effects(horizonclient.EffectRequest{Limit: 200})
+	effectsPage, err := itest.Client().Effects(horizonclient.EffectRequest{Limit: 200})
 	assert.NoError(t, err, "/effects failed")
+
+	for _, effect := range effectsPage.Embedded.Records {
+		if effect.GetType() == "trade" {
+			trade := effect.(effects.Trade)
+			oneSet := trade.AccountMuxedID != 0 || trade.SellerMuxedID != 0
+			assert.True(t, oneSet, "at least one of account_muxed_id, seller_muxed_id must be set")
+		}
+	}
 }
