@@ -73,15 +73,36 @@ func TestMuxedOperations(t *testing.T) {
 		&txnbuild.EndSponsoringFutureReserves{
 			SourceAccount: sponsored.Address(),
 		},
-		// This with:
-		// > Field: Destination, Error: invalid version byte
-		// > validation failed for *txnbuild.AccountMerge operation
-		// &txnbuild.AccountMerge{
-		// 	SourceAccount: sponsoredMuxed.Address(),
-		// 	Destination:   masterMuxed.Address(),
-		// },
 	}
 	txResp, err := itest.SubmitMultiSigOperations(itest.MasterAccount(), []*keypair.Full{master, sponsored}, ops...)
+	assert.NoError(t, err)
+	assert.True(t, txResp.Successful)
+
+	ops = []txnbuild.Operation{
+		// Remove subentries to be able to merge account
+		&txnbuild.ManageSellOffer{
+			SourceAccount: sponsoredMuxed.Address(),
+			Selling:       txnbuild.NativeAsset{},
+			Buying:        txnbuild.CreditAsset{"ABCD", master.Address()},
+			Amount:        "0",
+			Price:         "1",
+			OfferID:       1,
+		},
+		&txnbuild.ChangeTrust{
+			SourceAccount: sponsoredMuxed.Address(),
+			Line:          txnbuild.CreditAsset{"ABCD", master.Address()},
+			Limit:         "0",
+		},
+		&txnbuild.ManageData{
+			SourceAccount: sponsoredMuxed.Address(),
+			Name:          "test",
+		},
+		&txnbuild.AccountMerge{
+			SourceAccount: sponsoredMuxed.Address(),
+			Destination:   masterMuxed.Address(),
+		},
+	}
+	txResp, err = itest.SubmitMultiSigOperations(itest.MasterAccount(), []*keypair.Full{master, sponsored}, ops...)
 	assert.NoError(t, err)
 	assert.True(t, txResp.Successful)
 
