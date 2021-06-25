@@ -27,14 +27,14 @@ func (r *Operation) UnmarshalDetails(dest interface{}) error {
 	}
 	preprocessedDetails, err := preprocessDetails(r.DetailsString.String)
 	if err != nil {
-		err = errors.Wrap(err, "error in unmarshal")
+		return errors.Wrap(err, "error in unmarshal")
 	}
 	err = json.Unmarshal(preprocessedDetails, &dest)
 	if err != nil {
-		err = errors.Wrap(err, "error in unmarshal")
+		return errors.Wrap(err, "error in unmarshal")
 	}
 
-	return err
+	return nil
 }
 
 func preprocessDetails(details string) ([]byte, error) {
