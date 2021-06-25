@@ -51,6 +51,14 @@ func TestMuxedOperations(t *testing.T) {
 			Amount:        "3",
 			Price:         "1",
 		},
+		// This will generate a trade effect:
+		&txnbuild.ManageSellOffer{
+			SourceAccount: masterMuxed.Address(),
+			Selling:       txnbuild.CreditAsset{"ABCD", master.Address()},
+			Buying:        txnbuild.NativeAsset{},
+			Amount:        "3",
+			Price:         "1",
+		},
 		&txnbuild.ManageData{
 			SourceAccount: sponsoredMuxed.Address(),
 			Name:          "test",
@@ -80,13 +88,11 @@ func TestMuxedOperations(t *testing.T) {
 
 	ops = []txnbuild.Operation{
 		// Remove subentries to be able to merge account
-		&txnbuild.ManageSellOffer{
+		&txnbuild.Payment{
 			SourceAccount: sponsoredMuxed.Address(),
-			Selling:       txnbuild.NativeAsset{},
-			Buying:        txnbuild.CreditAsset{"ABCD", master.Address()},
-			Amount:        "0",
-			Price:         "1",
-			OfferID:       1,
+			Destination:   master.Address(),
+			Amount:        "3",
+			Asset:         txnbuild.CreditAsset{"ABCD", master.Address()},
 		},
 		&txnbuild.ChangeTrust{
 			SourceAccount: sponsoredMuxed.Address(),
