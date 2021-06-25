@@ -99,10 +99,10 @@ type Payment struct {
 	base.Asset
 	From        string `json:"from"`
 	FromMuxed   string `json:"from_muxed,omitempty"`
-	FromMuxedID uint64 `json:"from_muxed_id,omitempty"`
+	FromMuxedID uint64 `json:"from_muxed_id,omitempty,string"`
 	To          string `json:"to"`
 	ToMuxed     string `json:"to_muxed,omitempty"`
-	ToMuxedID   uint64 `json:"to_muxed_id,omitempty"`
+	ToMuxedID   uint64 `json:"to_muxed_id,omitempty,string"`
 	Amount      string `json:"amount"`
 }
 
