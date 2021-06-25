@@ -27,7 +27,7 @@ func TestMuxedAccountDetails(t *testing.T) {
 	source := xdr.MuxedAccount{
 		Type: xdr.CryptoKeyTypeKeyTypeMuxedEd25519,
 		Med25519: &xdr.MuxedAccountMed25519{
-			Id:      0xcafebabe,
+			Id:      0xcafebabecafebabe,
 			Ed25519: *masterAcID.Ed25519,
 		},
 	}
@@ -35,7 +35,7 @@ func TestMuxedAccountDetails(t *testing.T) {
 	destination := xdr.MuxedAccount{
 		Type: xdr.CryptoKeyTypeKeyTypeMuxedEd25519,
 		Med25519: &xdr.MuxedAccountMed25519{
-			Id:      0xdeadbeef,
+			Id:      0xdeadbeefdeadbeef,
 			Ed25519: *destinationAcID.Ed25519,
 		},
 	}
