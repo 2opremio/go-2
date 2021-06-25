@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"text/template"
 
@@ -40,18 +39,19 @@ func (r *Operation) UnmarshalDetails(dest interface{}) error {
 
 func preprocessDetails(details string) ([]byte, error) {
 	var dest map[string]interface{}
-	err := json.Unmarshal([]byte(details), &dest)
-	if err != nil {
+	// Create a decoder using Number instead of float64 when decoding
+	// (so that decoding covers the full uint64 range)
+	decoder := json.NewDecoder(strings.NewReader(details))
+	decoder.UseNumber()
+	if err := decoder.Decode(&dest); err != nil {
 		return nil, err
 	}
 	for k, v := range dest {
 		if strings.HasSuffix(k, "_muxed_id") {
-			// encoding/json uses a float64 representation for numbers if interface{} is used as the destination
-			if vFloat, ok := v.(float64); ok {
+			if vNumber, ok := v.(json.Number); ok {
 				// transform it into a string so that _muxed_id unmarshalling works with `,string` tags
 				// see https://github.com/stellar/go/pull/3716#issuecomment-867057436
-				vIntStringed := fmt.Sprintf("%d", uint64(vFloat))
-				dest[k] = vIntStringed
+				dest[k] = vNumber.String()
 			}
 		}
 	}
