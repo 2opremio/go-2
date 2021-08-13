@@ -22,7 +22,7 @@ func TestFuzzLiquidityPools(t *testing.T) {
 	defer tt.Finish()
 	test.ResetHorizonDB(t, tt.HorizonDB)
 	q := &history.Q{&db.Session{DB: tt.HorizonDB}}
-	pp := NewLiquidityPoolsProcessor(q)
+	pp := NewLiquidityPoolsChangeProcessor(q)
 	gen := randxdr.NewGenerator()
 
 	var changes []xdr.LedgerEntryChange
@@ -58,7 +58,7 @@ func TestLiquidityPoolsChangeProcessorTestSuiteState(t *testing.T) {
 type LiquidityPoolsChangeProcessorTestSuiteState struct {
 	suite.Suite
 	ctx                    context.Context
-	processor              *LiquidityPoolsProcessor
+	processor              *LiquidityPoolsChangeProcessor
 	mockQ                  *history.MockQLiquidityPools
 	mockBatchInsertBuilder *history.MockLiquidityPoolsBatchInsertBuilder
 }
@@ -72,7 +72,7 @@ func (s *LiquidityPoolsChangeProcessorTestSuiteState) SetupTest() {
 		On("NewLiquidityPoolsBatchInsertBuilder", maxBatchSize).
 		Return(s.mockBatchInsertBuilder)
 
-	s.processor = NewLiquidityPoolsProcessor(s.mockQ)
+	s.processor = NewLiquidityPoolsChangeProcessor(s.mockQ)
 }
 
 func (s *LiquidityPoolsChangeProcessorTestSuiteState) TearDownTest() {
@@ -147,7 +147,7 @@ func TestLiquidityPoolsChangeProcessorTestSuiteLedger(t *testing.T) {
 type LiquidityPoolsChangeProcessorTestSuiteLedger struct {
 	suite.Suite
 	ctx                    context.Context
-	processor              *LiquidityPoolsProcessor
+	processor              *LiquidityPoolsChangeProcessor
 	mockQ                  *history.MockQLiquidityPools
 	mockBatchInsertBuilder *history.MockLiquidityPoolsBatchInsertBuilder
 }
@@ -161,7 +161,7 @@ func (s *LiquidityPoolsChangeProcessorTestSuiteLedger) SetupTest() {
 		On("NewLiquidityPoolsBatchInsertBuilder", maxBatchSize).
 		Return(s.mockBatchInsertBuilder)
 
-	s.processor = NewLiquidityPoolsProcessor(s.mockQ)
+	s.processor = NewLiquidityPoolsChangeProcessor(s.mockQ)
 }
 
 func (s *LiquidityPoolsChangeProcessorTestSuiteLedger) TearDownTest() {

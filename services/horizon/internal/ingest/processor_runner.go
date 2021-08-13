@@ -113,7 +113,7 @@ func (s *ProcessorRunner) buildChangeProcessor(
 		processors.NewSignersProcessor(s.historyQ, useLedgerCache),
 		processors.NewTrustLinesProcessor(s.historyQ),
 		processors.NewClaimableBalancesChangeProcessor(s.historyQ),
-		processors.NewLiquidityPoolsProcessor(s.historyQ),
+		processors.NewLiquidityPoolsChangeProcessor(s.historyQ),
 	})
 }
 
@@ -135,6 +135,7 @@ func (s *ProcessorRunner) buildTransactionProcessor(
 		processors.NewParticipantsProcessor(s.historyQ, sequence),
 		processors.NewTransactionProcessor(s.historyQ, sequence),
 		processors.NewClaimableBalancesTransactionProcessor(s.historyQ, sequence),
+		processors.NewLiquidityPoolsTransactionProcessor(s.historyQ, sequence),
 	})
 }
 
