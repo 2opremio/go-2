@@ -158,6 +158,32 @@ commands:
             echo "using stellar core version $(stellar-core version)"
             echo "export CAPTIVE_CORE_BIN=/usr/bin/stellar-core" >> $BASH_ENV
 
+  install_stellar_core_next:
+    parameters:
+      core-commit:
+        type: string
+        default: "a9d740de"
+    steps:
+      - restore_cache:
+          keys:
+            - stellar-core-next-<<parameters.core-version>>
+      - run:
+          name: Build Core Next (version <<parameters.core-version>>)<</parameters.core-version>>
+          command: |
+            if [ -e "${CIRCLE_WORKING_DIRECTORY}/stellar_core/stellar-core" ]; then
+              exit 0 # caching worked
+            fi
+            git clone "https://github.com/stellar/stellar-core.git" "${CIRCLE_WORKING_DIRECTORY}/stellar_core"
+            cd "${CIRCLE_WORKING_DIRECTORY}/stellar_core"
+            git reset --hard <<parameters.core-version>>
+            docker build --build-arg CONFIGURE_FLAGS=--enable-next-protocol-version-unsafe-for-production -t stellar-core-next -f docker/Dockerfile.testing # --build-arg
+
+
+      - save_cache:
+          key: stellar-core-next-<<parameters.core-version>>
+          paths: {{ .Environment.CIRCLE_WORKING_DIRECTORY }}/stellar_core/stellar-core"
+
+
   check_ingest_state:
     steps:
       - run:
