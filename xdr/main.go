@@ -127,15 +127,8 @@ func NewEncodingBuffer() *EncodingBuffer {
 // Subsequent calls to marshalling methods will overwrite the returned buffer.
 func (e *EncodingBuffer) UnsafeMarshalBinary(v interface{}) ([]byte, error) {
 	e.xdrEncoderBuf.Reset()
-	if encodable, ok := v.(xdrEncodable); ok {
-		// higher performance
-		if err := encodable.EncodeTo(e.encoder); err != nil {
-			return nil, err
-		}
-	} else {
-		if _, err := e.encoder.Encode(v); err != nil {
-			return nil, err
-		}
+	if _, err := e.encoder.Encode(v); err != nil {
+		return nil, err
 	}
 	return e.xdrEncoderBuf.Bytes(), nil
 }

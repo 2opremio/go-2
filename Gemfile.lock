@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/stellar/xdrgen.git
-  revision: 92a28e1f3ef3a2b7e9409a2baa2c5ed0751d3e1c
-  ref: master
+  revision: d5db838bf381f5fcf07e5086aecd0bbdd87846d9
+  ref: generate-marshalxdr
   specs:
     xdrgen (0.1.1)
       activesupport (~> 6)
@@ -41,7 +41,7 @@ GEM
     faraday-net_http_persistent (1.2.0)
     faraday-patron (1.0.0)
     faraday-rack (1.0.0)
-    i18n (1.8.10)
+    i18n (1.8.11)
       concurrent-ruby (~> 1.0)
     memoist (0.11.0)
     method_source (1.0.0)
@@ -79,4 +79,4 @@ DEPENDENCIES
   xdrgen!
 
 BUNDLED WITH
-   2.2.22
+   2.2.29
