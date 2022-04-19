@@ -41,6 +41,11 @@ func (m *mockDBQ) Commit() error {
 	return args.Error(0)
 }
 
+func (m *mockDBQ) Rollback() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 func (m *mockDBQ) NoRows(err error) bool {
 	args := m.Called(err)
 	return args.Bool(0)

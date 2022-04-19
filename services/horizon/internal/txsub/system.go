@@ -19,6 +19,7 @@ type HorizonDB interface {
 	GetSequenceNumbers(ctx context.Context, addresses []string) (map[string]uint64, error)
 	BeginTx(*sql.TxOptions) error
 	Commit() error
+	Rollback() error
 	NoRows(error) bool
 }
 
