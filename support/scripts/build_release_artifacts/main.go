@@ -20,8 +20,10 @@ var extractBinName = regexp.MustCompile(`^(?P<bin>[a-z0-9-]+)-(?P<tag>.+)$`)
 
 var builds = []buildConfig{
 	{"darwin", "amd64"},
+	{"darwin", "arm64"},
 	{"linux", "amd64"},
 	{"linux", "arm"},
+	{"linux", "arm64"},
 	{"windows", "amd64"},
 }
 
